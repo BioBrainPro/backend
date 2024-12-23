@@ -14,7 +14,7 @@ const appConfig = new mongoose.Schema({
     am: { type: String, default: '' },
     link: { type: String, default: '' },
   },
-  easyState: { type: Boolean, default: '' },
+  easyState: { type: String, default: '' },
   brandColor: { type: String, default: '' },
   background: { type: String, required: true },
 });

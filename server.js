@@ -29,7 +29,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Define the allowed origins
-const allowedOrigins = ['http://localhost:5174', 'http://localhost:5173', 'http://biobrainpro.infy.uk/'];
+const allowedOrigins = ['http://localhost:5174', 'http://localhost:5173', 'http://biobrainpro.infy.uk'];
 
 // Middleware
 app.use(
