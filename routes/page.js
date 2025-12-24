@@ -5,13 +5,13 @@ const Page = require("../models/page");
 // Create a new page
 router.post("/create", async (req, res) => {
   try {
-    const { name, path, content } = req.body;
+    const { name, path, content, index } = req.body;
 
     if (!name || !path || !content.length) {
       return res.status(400).json({ message: "Page name is required." });
     }
 
-    const newPage = new Page({ name, path, content });
+    const newPage = new Page({ name, path, content, index });
     await newPage.save();
 
     res.status(201).json({ message: "Page created successfully.", page: newPage });
@@ -27,10 +27,10 @@ router.post("/create", async (req, res) => {
 router.put("/edit/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, content, seo } = req.body;
+    const { name, content, seo, index } = req.body;
     const updatedPage = await Page.findByIdAndUpdate(
       id,
-      { ...(name && { name }), ...(content && { content }), ...(seo && { seo }) },
+      { ...(name && { name }), ...(content && { content }), ...(seo && { seo }), ...(index && { index }) },
       { new: true },
     );
 

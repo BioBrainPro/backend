@@ -9,36 +9,28 @@ const path = require('path');
 const pageRoutes = require("./routes/page");
 const contactRoutes = require('./routes/contact');
 const { isAuthenticated } = require('./middleware/auth');  
+const http = require('http');  // For HTTP server
+const https = require('https'); // For HTTPS (optional, if you enable it)
+const fs = require('fs'); // For SSL certificates (only for HTTPS)
 
-// Super Admin credentials
-const SUPER_ADMIN_EMAIL = 'BioBrainPro@gmail.com';
-const SUPER_ADMIN_PASSWORD = 'BioBrainProAdmin2024';
-
-// Import routes
-const authRoutes = require('./routes/auth');
-const adminRoutes = require('./routes/admin');
-const homeRoutes = require('./routes/home');
-const uploadsRoutes = require('./routes/uploads');
-const appRoutes = require('./routes/app');
-const footerRoutes = require('./routes/footer');
-
-// Load environment variables
 dotenv.config();
 
 const app = express();
+
+// Use the PORT from the environment or default to 3000
 const PORT = process.env.PORT || 3000;
 
-// Define the allowed origins
 const allowedOrigins = [
   'https://biobrainpro.net', 
   'https://biobrainpro.info', 
+  'http://localhost:5173',
+  'http://localhost:5174'
 ];
 
-// Middleware
+// Middleware for CORS and authentication
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g., mobile apps or curl)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -62,35 +54,50 @@ mongoose
   .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
-app.use('/api/auth', authRoutes); // Authentication routes
-app.use('/api/home', homeRoutes); // Home content routes
-app.use("/api/pages", isAuthenticated, pageRoutes);
-app.use("/api/contact", contactRoutes);
-app.use("/api/app-config", appRoutes);
-app.use("/api/footer", footerRoutes);
-app.use("/api/admin", adminRoutes);
+app.use('/api/auth', require('./routes/auth')); // Authentication routes
+app.use('/api/home', require('./routes/home')); // Home content routes
+app.use("/api/pages", isAuthenticated, require("./routes/page"));
+app.use("/api/contact", require('./routes/contact'));
+app.use("/api/app-config", require('./routes/app'));
+app.use("/api/footer", require('./routes/footer'));
+app.use("/api/header", require('./routes/header'));
+app.use("/api/admin", require('./routes/admin'));
 
-// Middleware to serve static files from the uploads folder
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Make uploads folder accessible
+// Serve static files from the uploads folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Upload routes
-app.use('/api/uploads', uploadsRoutes); // Upload file handling and media fetching routes
+app.use('/api/uploads', require('./routes/uploads')); // File upload handling
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// HTTP server (to handle HTTP requests)
+http.createServer(app).listen(PORT, () => {
+  console.log(`HTTP server running on http://localhost:${PORT}`);
 });
+
+// Optional: HTTPS server (if you want HTTPS enabled with SSL certificates)
+if (process.env.HTTPS_ENABLED === 'true') {
+  const options = {
+    key: fs.readFileSync('path/to/your/private-key.pem'),
+    cert: fs.readFileSync('path/to/your/certificate.pem'),
+    ca: fs.readFileSync('path/to/your/ca-certificate.pem')
+  };
+
+  https.createServer(options, app).listen(PORT, () => {
+    console.log(`HTTPS server running on https://localhost:${PORT}`);
+  });
+} else {
+  console.log("HTTPS is not enabled. Running only with HTTP.");
+}
 
 // Function to check and create the super admin if not present
 async function checkAndCreateSuperAdmin() {
   try {
-    const superAdmin = await User.findOne({ email: SUPER_ADMIN_EMAIL });
+    const superAdmin = await User.findOne({ email: 'BioBrainPro@gmail.com' });
 
     if (!superAdmin) {
-      // If no super admin found, create a new one
       const newSuperAdmin = new User({
-        email: SUPER_ADMIN_EMAIL,
-        password: SUPER_ADMIN_PASSWORD,
+        email: 'BioBrainPro@gmail.com',
+        password: 'BioBrainProAdmin2024',
         role: 'superAdmin',
       });
 

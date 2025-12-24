@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const pageSchema = new mongoose.Schema(
   {
+    index: { type: Number, default: 0 },
     name: { type: Map, of: String,  required: true, unique: true },
     path: { type: String, required: true, unique: true },
     seo: {
